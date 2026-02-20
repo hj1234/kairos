@@ -33,15 +33,17 @@ function businessDaysInEventWithinPeriod(
   eventStart: Date,
   eventEnd: Date,
   periodStart: Date,
-  periodEnd: Date
+  periodEnd: Date,
+  halfDayPeriod: 'morning' | 'afternoon' | null
 ): number {
   const start = isBefore(eventStart, periodStart) ? periodStart : eventStart;
   const end = isAfter(eventEnd, periodEnd) ? periodEnd : eventEnd;
   if (isAfter(start, end)) return 0;
+  const dayMultiplier = halfDayPeriod ? 0.5 : 1;
   let count = 0;
   let cur = new Date(start);
   while (cur <= end) {
-    if (!isWeekend(cur)) count++;
+    if (!isWeekend(cur)) count += dayMultiplier;
     cur = addDays(cur, 1);
   }
   return count;
@@ -73,32 +75,37 @@ export function calculateBalance(
   for (const event of myEvents) {
     const start = new Date(event.start_date);
     const end = new Date(event.end_date);
+    const halfDay = event.half_day_period ?? null;
 
     if (event.type === 'holiday') {
       holidayUsed += businessDaysInEventWithinPeriod(
         start,
         end,
         holidayPeriod.periodStart,
-        holidayPeriod.periodEnd
+        holidayPeriod.periodEnd,
+        halfDay
       );
       nextPeriodHolidayUsed += businessDaysInEventWithinPeriod(
         start,
         end,
         nextHolidayPeriod.periodStart,
-        nextHolidayPeriod.periodEnd
+        nextHolidayPeriod.periodEnd,
+        halfDay
       );
     } else {
       wfaUsed += businessDaysInEventWithinPeriod(
         start,
         end,
         wfaPeriod.periodStart,
-        wfaPeriod.periodEnd
+        wfaPeriod.periodEnd,
+        halfDay
       );
       nextPeriodWfaUsed += businessDaysInEventWithinPeriod(
         start,
         end,
         nextWfaPeriod.periodStart,
-        nextWfaPeriod.periodEnd
+        nextWfaPeriod.periodEnd,
+        halfDay
       );
     }
   }

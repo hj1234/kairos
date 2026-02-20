@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import type { EventType, Event } from '@/lib/types';
+import type { EventType, Event, HalfDayPeriod } from '@/lib/types';
 
 interface EventFormProps {
   initialDate: Date;
@@ -21,6 +21,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState(format(initialDate, 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(initialDate, 'yyyy-MM-dd'));
+  const [halfDayPeriod, setHalfDayPeriod] = useState<HalfDayPeriod | null>(null);
   const [forBoth, setForBoth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<{ id: string; display_name: string }[]>([]);
@@ -37,11 +38,13 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
       setName(editingEvent.name ?? '');
       setStartDate(editingEvent.start_date);
       setEndDate(editingEvent.end_date);
+      setHalfDayPeriod(editingEvent.half_day_period ?? null);
       setForBoth(editingEvent.user_ids.length > 1);
     } else if (dayEvents.length === 0) {
       setType('holiday');
       setStartDate(format(initialDate, 'yyyy-MM-dd'));
       setEndDate(format(initialDate, 'yyyy-MM-dd'));
+      setHalfDayPeriod(null);
     }
   }, [editingEvent, dayEvents.length, initialDate]);
 
@@ -81,17 +84,25 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
       : [user.id];
 
     if (isEditMode && editingEvent) {
-      // Update: check overlap excluding current event
+      // Update: check overlap excluding current event (morning + afternoon allowed)
       const { data: existing } = await supabase
         .from('events')
-        .select('id')
+        .select('id, half_day_period')
         .eq('type', type)
         .overlaps('user_ids', userIds)
         .lte('start_date', endDate)
         .gte('end_date', startDate)
         .neq('id', editingEvent.id);
 
-      if (existing && existing.length > 0) {
+      const conflicting = (existing ?? []).filter((ev) => {
+        const ex = ev.half_day_period ?? null;
+        const ours = halfDayPeriod;
+        if (ex === null || ours === null) return true; // full day conflicts with all
+        if (ex === ours) return true; // same period conflicts
+        return false; // morning vs afternoon: no conflict
+      });
+
+      if (conflicting.length > 0) {
         setLoading(false);
         alert(`You already have a ${type === 'holiday' ? 'holiday' : 'work from abroad'} on these dates.`);
         return;
@@ -105,6 +116,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
           name: name.trim() || null,
           start_date: startDate,
           end_date: endDate,
+          half_day_period: halfDayPeriod,
         })
         .eq('id', editingEvent.id);
 
@@ -114,16 +126,24 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
         return;
       }
     } else {
-      // Create: check overlap
+      // Create: check overlap (morning + afternoon allowed)
       const { data: existing } = await supabase
         .from('events')
-        .select('id')
+        .select('id, half_day_period')
         .eq('type', type)
         .overlaps('user_ids', userIds)
         .lte('start_date', endDate)
         .gte('end_date', startDate);
 
-      if (existing && existing.length > 0) {
+      const conflicting = (existing ?? []).filter((ev) => {
+        const ex = ev.half_day_period ?? null;
+        const ours = halfDayPeriod;
+        if (ex === null || ours === null) return true; // full day conflicts with all
+        if (ex === ours) return true; // same period conflicts
+        return false; // morning vs afternoon: no conflict
+      });
+
+      if (conflicting.length > 0) {
         setLoading(false);
         alert(`You already have a ${type === 'holiday' ? 'holiday' : 'work from abroad'} on these dates.`);
         return;
@@ -135,6 +155,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
         name: name.trim() || null,
         start_date: startDate,
         end_date: endDate,
+        half_day_period: halfDayPeriod,
         created_by: user.id,
       });
       setLoading(false);
@@ -196,6 +217,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 setName('');
                 setStartDate(format(initialDate, 'yyyy-MM-dd'));
                 setEndDate(format(initialDate, 'yyyy-MM-dd'));
+                setHalfDayPeriod(null);
               }}
               className="w-full rounded-lg border border-dashed border-zinc-300 px-4 py-3 text-left text-sm text-zinc-600 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
             >
@@ -209,6 +231,9 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-left text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
               >
                 <span className="font-medium">{ev.name || ev.type.replace('_', ' ')}</span>
+                {ev.half_day_period && (
+                  <span className="ml-2 text-zinc-500">({ev.half_day_period})</span>
+                )}
                 <span className="ml-2 text-zinc-500">
                   {format(new Date(ev.start_date), 'd MMM')} – {format(new Date(ev.end_date), 'd MMM yyyy')}
                 </span>
@@ -331,6 +356,38 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
               required
               className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700">Day period</label>
+            <div className="mt-1 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setHalfDayPeriod(null)}
+                className={`flex-1 rounded-lg border px-4 py-2 text-sm ${
+                  halfDayPeriod === null ? 'border-zinc-900 bg-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-700'
+                }`}
+              >
+                Full day
+              </button>
+              <button
+                type="button"
+                onClick={() => setHalfDayPeriod('morning')}
+                className={`flex-1 rounded-lg border px-4 py-2 text-sm ${
+                  halfDayPeriod === 'morning' ? 'border-zinc-900 bg-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-700'
+                }`}
+              >
+                Morning
+              </button>
+              <button
+                type="button"
+                onClick={() => setHalfDayPeriod('afternoon')}
+                className={`flex-1 rounded-lg border px-4 py-2 text-sm ${
+                  halfDayPeriod === 'afternoon' ? 'border-zinc-900 bg-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-700'
+                }`}
+              >
+                Afternoon
+              </button>
+            </div>
           </div>
           <div className="flex gap-3 pt-2">
             <button

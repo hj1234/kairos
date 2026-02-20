@@ -59,19 +59,23 @@ export async function BalanceCards() {
             <div className="mt-2 space-y-1 text-sm">
               <p>
                 <span className="text-zinc-500">Holiday:</span>{' '}
-                <span className="font-medium">{holidayBalance} days left</span>
+                <span className="font-medium">
+                  {holidayBalance % 1 === 0 ? holidayBalance : holidayBalance.toFixed(1)} days left
+                </span>
                 {showNextPeriodHoliday && (
                   <span className="ml-1 text-zinc-500">
-                    (next: {nextPeriodHolidayBalance})
+                    (next: {nextPeriodHolidayBalance % 1 === 0 ? nextPeriodHolidayBalance : nextPeriodHolidayBalance.toFixed(1)})
                   </span>
                 )}
               </p>
               <p>
                 <span className="text-zinc-500">Work from abroad:</span>{' '}
-                <span className="font-medium">{wfaBalance} days left</span>
+                <span className="font-medium">
+                  {wfaBalance % 1 === 0 ? wfaBalance : wfaBalance.toFixed(1)} days left
+                </span>
                 {showNextPeriodWfa && (
                   <span className="ml-1 text-zinc-500">
-                    (next: {nextPeriodWfaBalance})
+                    (next: {nextPeriodWfaBalance % 1 === 0 ? nextPeriodWfaBalance : nextPeriodWfaBalance.toFixed(1)})
                   </span>
                 )}
               </p>
