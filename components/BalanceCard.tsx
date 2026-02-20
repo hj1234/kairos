@@ -33,9 +33,13 @@ export async function BalanceCards() {
     .from('events')
     .select('*');
 
+  const sortedProfiles = [...householdProfiles].sort((a, b) =>
+    a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase())
+  );
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {householdProfiles.map((profile) => {
+      {sortedProfiles.map((profile) => {
         const {
           holidayBalance,
           wfaBalance,
@@ -69,7 +73,7 @@ export async function BalanceCards() {
                 )}
               </p>
               <p>
-                <span className="text-zinc-500">Work from abroad:</span>{' '}
+                <span className="text-zinc-500">Remote work:</span>{' '}
                 <span className="font-medium">
                   {wfaBalance % 1 === 0 ? wfaBalance : wfaBalance.toFixed(1)} days left
                 </span>

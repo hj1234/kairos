@@ -17,7 +17,7 @@ BEGIN
     AND e.end_date >= new.start_date
   ) THEN
     RAISE EXCEPTION 'You already have a % on these dates',
-      CASE new.type WHEN 'holiday' THEN 'holiday' WHEN 'work_from_abroad' THEN 'work from abroad' END;
+      CASE new.type WHEN 'holiday' THEN 'holiday' WHEN 'work_from_abroad' THEN 'remote work' END;
   END IF;
   RETURN new;
 END;

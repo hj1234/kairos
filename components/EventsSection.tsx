@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { format } from 'date-fns';
 import { Calendar } from './Calendar';
 import { EventListView } from './EventListView';
 import { EventForm } from './EventForm';
@@ -53,34 +52,11 @@ export function EventsSection({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setView('calendar')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            view === 'calendar'
-              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-              : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-          }`}
-        >
-          Calendar
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('list')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            view === 'list'
-              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-              : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-          }`}
-        >
-          List
-        </button>
-      </div>
-
+    <div className="flex flex-col gap-4 md:min-h-0 md:flex-1">
       {view === 'calendar' ? (
         <Calendar
+          view={view}
+          onViewChange={setView}
           bankHolidays={bankHolidays}
           events={events}
           profiles={profiles}
@@ -92,6 +68,8 @@ export function EventsSection({
           profiles={profiles}
           onEventClick={openFormForEvent}
           onAddClick={openFormForNew}
+          view={view}
+          onViewChange={setView}
         />
       )}
 

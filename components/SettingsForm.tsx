@@ -17,11 +17,11 @@ const MONTHS = [
 export function SettingsForm({ profile }: SettingsFormProps) {
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [holidayAllowance, setHolidayAllowance] = useState(profile.holiday_allowance_days);
-  const [wfaAllowance, setWfaAllowance] = useState(profile.work_from_abroad_days);
+  const [wfaAllowance, setWfaAllowance] = useState(profile.remote_work_days);
   const [holidayResetDay, setHolidayResetDay] = useState(profile.holiday_reset_day);
   const [holidayResetMonth, setHolidayResetMonth] = useState(profile.holiday_reset_month);
-  const [wfaResetDay, setWfaResetDay] = useState(profile.wfa_reset_day);
-  const [wfaResetMonth, setWfaResetMonth] = useState(profile.wfa_reset_month);
+  const [wfaResetDay, setWfaResetDay] = useState(profile.remote_work_reset_day);
+  const [wfaResetMonth, setWfaResetMonth] = useState(profile.remote_work_reset_month);
   const [partnerEmail, setPartnerEmail] = useState('');
   const [linkStatus, setLinkStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [linkMessage, setLinkMessage] = useState('');
@@ -37,11 +37,11 @@ export function SettingsForm({ profile }: SettingsFormProps) {
       .update({
         display_name: displayName,
         holiday_allowance_days: holidayAllowance,
-        work_from_abroad_days: wfaAllowance,
+        remote_work_days: wfaAllowance,
         holiday_reset_day: holidayResetDay,
         holiday_reset_month: holidayResetMonth,
-        wfa_reset_day: wfaResetDay,
-        wfa_reset_month: wfaResetMonth,
+        remote_work_reset_day: wfaResetDay,
+        remote_work_reset_month: wfaResetMonth,
       })
       .eq('id', profile.id);
     setSaving(false);
@@ -127,7 +127,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
         </div>
         <div>
           <label htmlFor="wfaAllowance" className="block text-sm font-medium text-zinc-700">
-            Work from abroad allowance (days per year)
+            Remote work allowance (days per year)
           </label>
           <input
             id="wfaAllowance"
@@ -141,7 +141,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
         </div>
         <div>
           <label htmlFor="wfaReset" className="block text-sm font-medium text-zinc-700">
-            Work from abroad reset date
+            Remote work reset date
           </label>
           <div className="mt-1 flex gap-2">
             <input

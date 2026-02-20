@@ -13,11 +13,11 @@ function getResetDate(year: number, day: number, month: number): Date {
   return setDate(setMonth(new Date(year, 0, 1), month - 1), day);
 }
 
-function getPeriod(profile: Profile, type: 'holiday' | 'work_from_abroad', offsetYears: number) {
+function getPeriod(profile: Profile, type: 'holiday' | 'remote_work', offsetYears: number) {
   const now = new Date();
   const isHoliday = type === 'holiday';
-  const day = isHoliday ? profile.holiday_reset_day : profile.wfa_reset_day;
-  const month = isHoliday ? profile.holiday_reset_month : profile.wfa_reset_month;
+  const day = isHoliday ? profile.holiday_reset_day : profile.remote_work_reset_day;
+  const month = isHoliday ? profile.holiday_reset_month : profile.remote_work_reset_month;
 
   let periodStart = getResetDate(now.getFullYear(), day, month);
   if (isBefore(now, periodStart)) {
@@ -64,6 +64,19 @@ function businessDaysInEventWithinPeriod(
   return count;
 }
 
+export function businessDaysInEvent(event: Event): number {
+  const start = new Date(event.start_date);
+  const end = new Date(event.end_date);
+  return businessDaysInEventWithinPeriod(
+    start,
+    end,
+    start,
+    end,
+    event.start_half_day ?? false,
+    event.end_half_day ?? false
+  );
+}
+
 export function calculateBalance(
   profile: Profile,
   events: Event[]
@@ -76,9 +89,9 @@ export function calculateBalance(
   showNextPeriodWfa: boolean;
 } {
   const holidayPeriod = getPeriod(profile, 'holiday', 0);
-  const wfaPeriod = getPeriod(profile, 'work_from_abroad', 0);
+  const wfaPeriod = getPeriod(profile, 'remote_work', 0);
   const nextHolidayPeriod = getPeriod(profile, 'holiday', 1);
-  const nextWfaPeriod = getPeriod(profile, 'work_from_abroad', 1);
+  const nextWfaPeriod = getPeriod(profile, 'remote_work', 1);
 
   let holidayUsed = 0;
   let wfaUsed = 0;
@@ -132,14 +145,14 @@ export function calculateBalance(
 
   return {
     holidayBalance: Math.max(0, profile.holiday_allowance_days - holidayUsed),
-    wfaBalance: Math.max(0, profile.work_from_abroad_days - wfaUsed),
+    wfaBalance: Math.max(0, profile.remote_work_days - wfaUsed),
     nextPeriodHolidayBalance: Math.max(
       0,
       profile.holiday_allowance_days - nextPeriodHolidayUsed
     ),
     nextPeriodWfaBalance: Math.max(
       0,
-      profile.work_from_abroad_days - nextPeriodWfaUsed
+      profile.remote_work_days - nextPeriodWfaUsed
     ),
     showNextPeriodHoliday: nextPeriodHolidayUsed > 0,
     showNextPeriodWfa: nextPeriodWfaUsed > 0,

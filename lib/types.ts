@@ -1,4 +1,8 @@
-export type EventType = 'holiday' | 'work_from_abroad';
+export type EventType = 'holiday' | 'remote_work';
+
+export function getEventTypeDisplayName(type: EventType): string {
+  return type === 'remote_work' ? 'Remote work' : type;
+}
 
 export interface Profile {
   id: string;
@@ -6,11 +10,11 @@ export interface Profile {
   display_name: string;
   partner_id?: string | null;
   holiday_allowance_days: number;
-  work_from_abroad_days: number;
+  remote_work_days: number;
   holiday_reset_day: number;
   holiday_reset_month: number;
-  wfa_reset_day: number;
-  wfa_reset_month: number;
+  remote_work_reset_day: number;
+  remote_work_reset_month: number;
   created_at?: string;
   updated_at?: string;
 }

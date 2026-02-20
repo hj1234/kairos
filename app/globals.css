@@ -29,3 +29,12 @@ body {
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Date input calendar icon - match site styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

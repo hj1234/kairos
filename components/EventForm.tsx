@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import type { EventType, Event } from '@/lib/types';
+import { getEventTypeDisplayName, type EventType, type Event } from '@/lib/types';
 
 interface EventFormProps {
   initialDate: Date;
@@ -99,7 +99,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
 
       if (existing && existing.length > 0) {
         setLoading(false);
-        alert(`You already have a ${type === 'holiday' ? 'holiday' : 'work from abroad'} on these dates.`);
+        alert(`You already have a ${type === 'holiday' ? 'holiday' : 'remote work'} on these dates.`);
         return;
       }
 
@@ -133,7 +133,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
 
       if (existing && existing.length > 0) {
         setLoading(false);
-        alert(`You already have a ${type === 'holiday' ? 'holiday' : 'work from abroad'} on these dates.`);
+        alert(`You already have a ${type === 'holiday' ? 'holiday' : 'remote work'} on these dates.`);
         return;
       }
 
@@ -220,7 +220,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 onClick={() => setEditingEvent(ev)}
                 className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-left text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
               >
-                <span className="font-medium">{ev.name || ev.type.replace('_', ' ')}</span>
+                <span className="font-medium">{ev.name || getEventTypeDisplayName(ev.type)}</span>
                 {(ev.start_half_day || ev.end_half_day) && (
                   <span className="ml-2 text-zinc-500">
                     ({ev.start_date === ev.end_date
@@ -264,41 +264,41 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700">Type</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Type</label>
             <div className="mt-1 flex gap-2">
               <button
                 type="button"
                 onClick={() => setType('holiday')}
-                className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium ${
+                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                   type === 'holiday'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950'
-                    : 'border-zinc-200 dark:border-zinc-700'
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 Holiday
               </button>
               <button
                 type="button"
-                onClick={() => setType('work_from_abroad')}
-                className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium ${
-                  type === 'work_from_abroad'
-                    ? 'border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-950'
-                    : 'border-zinc-200 dark:border-zinc-700'
+                onClick={() => setType('remote_work')}
+                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  type === 'remote_work'
+                    ? 'border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-600 dark:bg-sky-950 dark:text-sky-300'
+                    : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
                 }`}
               >
-                Work from abroad
+                Remote work
               </button>
             </div>
           </div>
           {profiles.length === 2 && (
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Who</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Who</label>
               <div className="mt-1 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setForBoth(false)}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm ${
-                    !forBoth ? 'border-zinc-900 bg-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-700'
+                  className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                    !forBoth ? 'border-zinc-900 bg-zinc-100 text-zinc-900 dark:border-zinc-100 dark:bg-zinc-800 dark:text-zinc-100' : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
                   }`}
                 >
                   Just me
@@ -306,8 +306,8 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 <button
                   type="button"
                   onClick={() => setForBoth(true)}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm ${
-                    forBoth ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : 'border-zinc-200 dark:border-zinc-700'
+                  className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                    forBoth ? 'border-amber-500 bg-amber-50 text-amber-800 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-300' : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
                   }`}
                 >
                   Both of us
@@ -316,7 +316,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
             </div>
           )}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="name" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Name (optional)
             </label>
             <input
@@ -325,11 +325,11 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Summer holiday"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+              className="mt-1 block w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-900 transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-zinc-100"
             />
           </div>
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="startDate" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Start date
             </label>
             <div className="mt-1 flex items-center gap-3">
@@ -339,21 +339,21 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="block flex-1 rounded-lg border border-zinc-300 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+                className="block flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-900 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
               />
-              <label className="flex shrink-0 items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                 <input
                   type="checkbox"
                   checked={startHalfDay}
                   onChange={(e) => setStartHalfDay(e.target.checked)}
-                  className="rounded border-zinc-300"
+                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
                 />
                 Half day
               </label>
             </div>
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="endDate" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               End date
             </label>
             <div className="mt-1 flex items-center gap-3">
@@ -364,15 +364,15 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 onChange={(e) => setEndDate(e.target.value)}
                 min={startDate}
                 required
-                className="block flex-1 rounded-lg border border-zinc-300 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+                className="block flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-900 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
               />
               {startDate !== endDate && (
-                <label className="flex shrink-0 items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                   <input
                     type="checkbox"
                     checked={endHalfDay}
                     onChange={(e) => setEndHalfDay(e.target.checked)}
-                    className="rounded border-zinc-300"
+                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
                   />
                   Half day
                 </label>
@@ -383,7 +383,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 font-medium dark:border-zinc-700"
+              className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               Cancel
             </button>
@@ -392,7 +392,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
                 type="button"
                 onClick={handleDelete}
                 disabled={loading}
-                className="rounded-lg border border-red-200 px-4 py-2 font-medium text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 disabled:opacity-50"
+                className="rounded-xl border border-red-200 px-4 py-2.5 font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 disabled:opacity-50"
               >
                 {loading ? 'Deleting...' : 'Delete'}
               </button>
@@ -400,7 +400,7 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              className="flex-1 rounded-xl bg-zinc-900 px-4 py-2.5 font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {loading ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
             </button>

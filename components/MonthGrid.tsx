@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import {
   startOfMonth,
   endOfMonth,
@@ -10,9 +11,10 @@ import {
   isSameMonth,
   isSameDay,
 } from 'date-fns';
-import type { BankHoliday } from '@/lib/types';
-import type { Event } from '@/lib/types';
+import { getEventTypeDisplayName, type BankHoliday, type Event } from '@/lib/types';
 import { getUserColor } from '@/lib/user-colors';
+import { businessDaysInEvent } from '@/lib/balance';
+import { EventTypeIndicator } from './EventTypeIndicator';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -30,6 +32,7 @@ export function MonthGrid({
   bankHolidays = [],
   events = [],
   profiles = [],
+  compact = false,
 }: MonthGridProps) {
   const monthStart = startOfMonth(startMonth);
   const monthEnd = endOfMonth(startMonth);
@@ -37,18 +40,21 @@ export function MonthGrid({
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   const bhSet = new Set(bankHolidays.map((b) => b.date));
-  const eventsByDate = new Map<string, Event[]>();
-  for (const e of events) {
-    const start = new Date(e.start_date);
-    const end = new Date(e.end_date);
-    let cur = new Date(start);
-    while (cur <= end) {
-      const key = format(cur, 'yyyy-MM-dd');
-      if (!eventsByDate.has(key)) eventsByDate.set(key, []);
-      eventsByDate.get(key)!.push(e);
-      cur.setDate(cur.getDate() + 1);
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, Event[]>();
+    for (const e of events) {
+      const start = new Date(e.start_date);
+      const end = new Date(e.end_date);
+      let cur = new Date(start);
+      while (cur <= end) {
+        const key = format(cur, 'yyyy-MM-dd');
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(e);
+        cur.setDate(cur.getDate() + 1);
+      }
     }
-  }
+    return map;
+  }, [events]);
 
   const days: Date[] = [];
   let day = new Date(calendarStart);
@@ -64,6 +70,26 @@ export function MonthGrid({
     return false;
   };
 
+  const [hoveredDateStr, setHoveredDateStr] = useState<string | null>(null);
+
+  const highlightedDates = useMemo(() => {
+    if (!hoveredDateStr) return new Set<string>();
+    const evs = eventsByDate.get(hoveredDateStr) || [];
+    const dates = new Set<string>();
+    for (const e of evs) {
+      const start = new Date(e.start_date);
+      const end = new Date(e.end_date);
+      let cur = new Date(start);
+      while (cur <= end) {
+        dates.add(format(cur, 'yyyy-MM-dd'));
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+    return dates;
+  }, [hoveredDateStr, eventsByDate]);
+
+  const profileMap = new Map(profiles.map((p) => [p.id, p.display_name]));
+
   const getEventIndicators = (dateStr: string) => {
     const evs = eventsByDate.get(dateStr) || [];
     const byUser = new Map<string, { holiday: boolean; holidayHalfDay: boolean; wfa: boolean; wfaHalfDay: boolean }>();
@@ -76,26 +102,32 @@ export function MonthGrid({
           u.holiday = true;
           u.holidayHalfDay = halfDay;
         }
-        if (e.type === 'work_from_abroad') {
+        if (e.type === 'remote_work') {
           u.wfa = true;
           u.wfaHalfDay = halfDay;
         }
       }
     }
-    return Array.from(byUser.entries()).map(([userId, types]) => ({
-      userId,
-      color: getUserColor(userId),
-      ...types,
-    }));
+    return Array.from(byUser.entries())
+      .sort(([a], [b]) => {
+        const nameA = (profileMap.get(a) ?? '').toLowerCase();
+        const nameB = (profileMap.get(b) ?? '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      })
+      .map(([userId, types]) => ({
+        userId,
+        color: getUserColor(userId),
+        ...types,
+      }));
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="min-w-[280px] p-3">
-        <h3 className="mb-3 text-center font-medium">
+    <div className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 ${compact ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+      <div className={`min-w-[280px] p-3 ${compact ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+        <h3 className="mb-3 shrink-0 text-center font-medium">
           {format(startMonth, 'MMMM yyyy')}
         </h3>
-        <div className="grid grid-cols-7 gap-1">
+        <div className={`grid grid-cols-7 gap-1 ${compact ? '' : 'md:min-h-0 md:flex-1 md:auto-rows-fr'}`}>
           {WEEKDAYS.map((d) => (
             <div
               key={d}
@@ -104,20 +136,30 @@ export function MonthGrid({
               {d}
             </div>
           ))}
-          {days.map((d) => {
+          {days.map((d, dayIndex) => {
             const dateStr = format(d, 'yyyy-MM-dd');
             const isCurrentMonth = isSameMonth(d, startMonth);
             const isToday = isSameDay(d, new Date());
             const isBankHoliday = bhSet.has(dateStr);
             const dayEvents = eventsByDate.get(dateStr) || [];
             const indicators = getEventIndicators(dateStr);
+            const isInTopHalf = dayIndex < 14;
+            const tooltipAbove = !isInTopHalf;
+            const isHighlighted = hoveredDateStr !== null && highlightedDates.has(dateStr);
 
             return (
-              <button
+              <div
                 key={dateStr}
-                type="button"
-                onClick={() => onDayClick(d, dayEvents)}
-                className={`flex min-h-[44px] flex-col items-center justify-center rounded-lg p-1 text-sm transition-colors touch-manipulation ${
+                className="group relative flex min-h-0 flex-col"
+                onMouseEnter={() => dayEvents.length > 0 && setHoveredDateStr(dateStr)}
+                onMouseLeave={() => setHoveredDateStr(null)}
+              >
+                <button
+                  type="button"
+                  onClick={() => onDayClick(d, dayEvents)}
+                  className={`flex min-h-[44px] w-full flex-col items-center justify-center rounded-lg p-1 text-sm transition-colors touch-manipulation hover:bg-zinc-100 dark:hover:bg-zinc-800 ${compact ? '' : 'md:flex-1 md:min-h-0'} ${
+                    isHighlighted ? 'bg-zinc-100 dark:bg-zinc-800' : ''
+                  } ${
                   isCurrentMonth
                     ? 'text-zinc-900 dark:text-zinc-100'
                     : 'text-zinc-400 dark:text-zinc-500'
@@ -149,7 +191,60 @@ export function MonthGrid({
                     ))}
                   </div>
                 )}
-              </button>
+                </button>
+                {dayEvents.length > 0 && (
+                  <div
+                    className={`pointer-events-none invisible absolute left-1/2 z-50 min-w-[200px] max-w-[280px] -translate-x-1/2 rounded-xl border border-zinc-200 bg-white p-0 shadow-lg group-hover:visible dark:border-zinc-700 dark:bg-zinc-900 ${
+                      tooltipAbove ? 'bottom-full mb-1' : 'top-full mt-1'
+                    }`}
+                  >
+                    <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
+                      {dayEvents.map((e) => {
+                        const daysUsed = businessDaysInEvent(e);
+                        const daysText = daysUsed === 1 ? '1 day' : daysUsed % 1 === 0 ? `${Math.round(daysUsed)} days` : `${daysUsed.toFixed(1)} days`;
+                        return (
+                          <div
+                            key={e.id}
+                            className="flex items-start gap-3 px-4 py-3 text-left"
+                          >
+                            <EventTypeIndicator event={e} className="mt-0.5" profileMap={profileMap} />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                  {e.name || getEventTypeDisplayName(e.type)}
+                                </p>
+                                <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
+                                  {daysText}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {[...e.user_ids]
+                                  .sort((a, b) => {
+                                    const nameA = (profileMap.get(a) ?? '').toLowerCase();
+                                    const nameB = (profileMap.get(b) ?? '').toLowerCase();
+                                    return nameA.localeCompare(nameB);
+                                  })
+                                  .map((uid) => (
+                                  <span
+                                    key={uid}
+                                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    style={{
+                                      backgroundColor: `${getUserColor(uid)}20`,
+                                      color: getUserColor(uid),
+                                    }}
+                                  >
+                                    {profileMap.get(uid) ?? 'Unknown'}
+                                  </span>
+                                  ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

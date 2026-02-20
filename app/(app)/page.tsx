@@ -36,13 +36,17 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <BalanceCards />
-      <EventsSection
-        bankHolidays={bankHolidays}
-        events={events || []}
-        profiles={profiles}
-      />
+    <div className="flex flex-col gap-4 p-4 md:min-h-0 md:flex-1 md:flex">
+      <div className="min-h-0 shrink-0 md:flex md:min-h-0 md:flex-1 md:flex-col">
+        <EventsSection
+          bankHolidays={bankHolidays}
+          events={events || []}
+          profiles={profiles}
+        />
+      </div>
+      <div className="shrink-0">
+        <BalanceCards />
+      </div>
     </div>
   );
 }

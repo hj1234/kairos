@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Kairos - Holiday Planning",
-  description: "Plan holidays and work from abroad with your partner",
+  description: "Plan holidays and remote work with your partner",
 };
 
 export default function RootLayout({

@@ -1,11 +1,11 @@
 # Kairos - Holiday Planning
 
-A mobile-first holiday planning app for couples. Plan holidays and work-from-abroad days, track allowances, and see UK bank holidays on a 24-month calendar.
+A mobile-first holiday planning app for couples. Plan holidays and remote work days, track allowances, and see UK bank holidays on a 24-month calendar.
 
 ## Features
 
 - **24-month calendar** with UK (England & Wales) bank holidays
-- **Two users** with separate holiday and work-from-abroad allowances
+- **Two users** with separate holiday and remote work allowances
 - **Configurable reset dates** (e.g. 1 January, 4 April)
 - **Shared events** – create holidays for just you or both of you
 - **Balance tracking** – see remaining days at a glance

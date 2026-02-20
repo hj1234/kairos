@@ -32,7 +32,7 @@ begin
         or new.half_day_period = e.half_day_period;
       if conflict then
         raise exception 'You already have a % on these dates',
-          case new.type when 'holiday' then 'holiday' when 'work_from_abroad' then 'work from abroad' end;
+          case new.type when 'holiday' then 'holiday' when 'work_from_abroad' then 'remote work' end;
       end if;
     end loop;
   end loop;
