@@ -24,6 +24,8 @@ interface MonthGridProps {
   bankHolidays?: BankHoliday[];
   events?: Event[];
   profiles?: { id: string; display_name: string }[];
+  /** When true, month uses natural height (for scrollable multi-month view on desktop) */
+  compact?: boolean;
 }
 
 export function MonthGrid({
