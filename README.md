@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kairos - Holiday Planning
 
-## Getting Started
+A mobile-first holiday planning app for couples. Plan holidays and work-from-abroad days, track allowances, and see UK bank holidays on a 24-month calendar.
 
-First, run the development server:
+## Features
+
+- **24-month calendar** with UK (England & Wales) bank holidays
+- **Two users** with separate holiday and work-from-abroad allowances
+- **Configurable reset dates** (e.g. 1 January, 4 April)
+- **Shared events** – create holidays for just you or both of you
+- **Balance tracking** – see remaining days at a glance
+
+## Setup
+
+### 1. Supabase
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** and run the migration in `supabase/migrations/001_initial.sql`
+3. Enable **Email** auth in Authentication > Providers
+4. Copy your project URL and anon key from Settings > API
+
+### 2. Environment
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Edit `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Run
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Link with your partner
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Sign up with your email
+2. Your partner signs up with their email
+3. In Settings, enter your partner's email and click **Link**
+4. You can now create events together and see each other's balances
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16, React 19, Tailwind CSS
+- Supabase (Auth + PostgreSQL)
+- date-fns
+- UK bank holidays from [GOV.UK](https://www.gov.uk/bank-holidays.json)
