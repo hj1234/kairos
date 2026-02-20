@@ -1,7 +1,5 @@
 export type EventType = 'holiday' | 'work_from_abroad';
 
-export type HalfDayPeriod = 'morning' | 'afternoon';
-
 export interface Profile {
   id: string;
   email?: string | null;
@@ -22,7 +20,8 @@ export interface Event {
   user_ids: string[];
   type: EventType;
   name?: string | null;
-  half_day_period?: HalfDayPeriod | null;
+  start_half_day?: boolean;
+  end_half_day?: boolean;
   start_date: string;
   end_date: string;
   created_by: string | null;

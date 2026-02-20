@@ -57,15 +57,29 @@ export function MonthGrid({
     day = addDays(day, 1);
   }
 
+  const isHalfDayOnDate = (e: Event, dateStr: string): boolean => {
+    if (e.start_date === e.end_date) return !!(e.start_half_day || e.end_half_day);
+    if (dateStr === e.start_date) return !!e.start_half_day;
+    if (dateStr === e.end_date) return !!e.end_half_day;
+    return false;
+  };
+
   const getEventIndicators = (dateStr: string) => {
     const evs = eventsByDate.get(dateStr) || [];
-    const byUser = new Map<string, { holiday: boolean; wfa: boolean }>();
+    const byUser = new Map<string, { holiday: boolean; holidayHalfDay: boolean; wfa: boolean; wfaHalfDay: boolean }>();
     for (const e of evs) {
+      const halfDay = isHalfDayOnDate(e, dateStr);
       for (const uid of e.user_ids) {
-        if (!byUser.has(uid)) byUser.set(uid, { holiday: false, wfa: false });
+        if (!byUser.has(uid)) byUser.set(uid, { holiday: false, holidayHalfDay: false, wfa: false, wfaHalfDay: false });
         const u = byUser.get(uid)!;
-        if (e.type === 'holiday') u.holiday = true;
-        if (e.type === 'work_from_abroad') u.wfa = true;
+        if (e.type === 'holiday') {
+          u.holiday = true;
+          u.holidayHalfDay = halfDay;
+        }
+        if (e.type === 'work_from_abroad') {
+          u.wfa = true;
+          u.wfaHalfDay = halfDay;
+        }
       }
     }
     return Array.from(byUser.entries()).map(([userId, types]) => ({
@@ -117,17 +131,17 @@ export function MonthGrid({
                 )}
                 {dayEvents.length > 0 && (
                   <div className="mt-1 flex w-full max-w-[20px] flex-col items-center gap-0.5">
-                    {indicators.map(({ userId, color, holiday, wfa }) => (
-                      <div key={userId} className="flex w-full flex-col gap-0.5">
+                    {indicators.map(({ userId, color, holiday, holidayHalfDay, wfa, wfaHalfDay }) => (
+                      <div key={userId} className="flex w-full flex-col items-center gap-0.5">
                         {holiday && (
                           <span
-                            className="h-1 w-full rounded-sm"
+                            className={`h-1 rounded-sm ${holidayHalfDay ? 'w-1/2' : 'w-full'}`}
                             style={{ backgroundColor: color }}
                           />
                         )}
                         {wfa && (
                           <span
-                            className="h-1 w-full rounded-sm border bg-transparent"
+                            className={`h-1 rounded-sm border bg-transparent ${wfaHalfDay ? 'w-1/2' : 'w-full'}`}
                             style={{ borderColor: color }}
                           />
                         )}

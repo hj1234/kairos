@@ -77,8 +77,16 @@ export function EventListView({
                   </p>
                   <p className="text-sm text-zinc-500">
                     {formatDateRange(event.start_date, event.end_date)}
-                    {event.half_day_period && (
-                      <span className="ml-1 capitalize">· {event.half_day_period}</span>
+                    {(event.start_half_day || event.end_half_day) && (
+                      <span className="ml-1">
+                        · {event.start_date === event.end_date
+                          ? 'Half day'
+                          : event.start_half_day && event.end_half_day
+                            ? 'Start & end half'
+                            : event.start_half_day
+                              ? 'Start half'
+                              : 'End half'}
+                      </span>
                     )}
                     {event.name && (
                       <span className="ml-1 capitalize">
