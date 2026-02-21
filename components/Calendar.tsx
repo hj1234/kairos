@@ -6,8 +6,6 @@ import { YearGrid } from './YearGrid';
 import { addMonths, format } from 'date-fns';
 import type { BankHoliday } from '@/lib/types';
 import type { Event } from '@/lib/types';
-import { BankHolidayBadge } from './BankHolidayBadge';
-import { getUserColor } from '@/lib/user-colors';
 
 interface Profile {
   id: string;
@@ -39,7 +37,7 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
 
   return (
     <div className="flex flex-col gap-4 md:min-h-0 md:flex-1">
-      <div className="flex shrink-0 flex-col gap-2 md:grid md:grid-cols-3 md:items-center md:gap-4">
+      <div className="flex shrink-0 flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
         {/* Mobile: row 1 - calendar/list + month buttons. Desktop: left-aligned (order 1) */}
         <div className="flex items-center justify-between gap-2 md:contents">
           <div className="flex gap-2 md:order-1 md:justify-self-start">
@@ -113,30 +111,6 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
               </>
             )}
           </div>
-        </div>
-        {/* Legend - full width on mobile (row 2), centered on desktop (order 2) */}
-        <div className="flex w-full flex-wrap items-center justify-center gap-3 rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white dark:bg-zinc-900 md:order-2 md:w-auto md:justify-self-center">
-          {[...profiles]
-            .sort((a, b) => a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase()))
-            .map((p) => (
-            <span key={p.id} className="inline-flex items-center gap-1.5">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: getUserColor(p.id) }}
-              />
-              {p.display_name}
-            </span>
-            ))}
-          <span className="mx-1 h-3 w-px bg-zinc-600" />
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-2 rounded-sm bg-white" />
-            Holiday
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-2 rounded-sm border border-white bg-transparent" />
-            Remote work
-          </span>
-          <BankHolidayBadge className="text-white" />
         </div>
       </div>
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 md:flex md:min-h-0 md:flex-1 md:flex-col">
