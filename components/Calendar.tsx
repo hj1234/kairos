@@ -140,10 +140,7 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
         </div>
       </div>
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 md:flex md:min-h-0 md:flex-1 md:flex-col">
-        <div className="flex shrink-0 items-center gap-4 border-b border-zinc-200 px-3 py-2 dark:border-zinc-700">
-          <span className="font-medium text-zinc-900 dark:text-zinc-100">
-            {calendarMode === 'monthly' ? format(startDate, 'MMMM yyyy') : displayYear}
-          </span>
+        <div className="relative flex shrink-0 items-center justify-between border-b border-zinc-200 px-3 py-2 dark:border-zinc-700">
           <div className="flex gap-1 rounded-lg bg-zinc-200 p-1 dark:bg-zinc-800">
             <button
               type="button"
@@ -170,6 +167,10 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
               Year
             </button>
           </div>
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-medium text-zinc-900 dark:text-zinc-100">
+            {calendarMode === 'monthly' ? format(startDate, 'MMMM yyyy') : displayYear}
+          </span>
+          <div className="w-[5.5rem]" aria-hidden />
         </div>
         <div className="md:min-h-0 md:flex-1 md:overflow-y-auto">
           {calendarMode === 'monthly' ? (
