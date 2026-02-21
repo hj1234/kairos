@@ -26,6 +26,8 @@ interface MonthGridProps {
   profiles?: { id: string; display_name: string }[];
   /** When true, month uses natural height (for scrollable multi-month view on desktop) */
   compact?: boolean;
+  /** When true, render without outer border/header (parent provides them) */
+  embedded?: boolean;
 }
 
 export function MonthGrid({
@@ -35,6 +37,7 @@ export function MonthGrid({
   events = [],
   profiles = [],
   compact = false,
+  embedded = false,
 }: MonthGridProps) {
   const monthStart = startOfMonth(startMonth);
   const monthEnd = endOfMonth(startMonth);
@@ -124,12 +127,14 @@ export function MonthGrid({
   };
 
   return (
-    <div className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 ${compact ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
-      <div className={`min-w-[280px] p-3 ${compact ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+    <div className={`overflow-x-auto ${embedded ? 'flex min-h-0 flex-1 flex-col' : ''} ${embedded ? '' : 'rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'} ${compact || embedded ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+      <div className={`min-w-[280px] p-3 ${embedded ? 'flex min-h-0 flex-1 flex-col' : ''} ${compact || embedded ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+        {!embedded && (
         <h3 className="mb-3 shrink-0 text-center font-medium">
           {format(startMonth, 'MMMM yyyy')}
         </h3>
-        <div className={`grid grid-cols-7 gap-1 ${compact ? '' : 'md:min-h-0 md:flex-1 md:auto-rows-fr'}`}>
+        )}
+        <div className={`grid grid-cols-7 gap-1 ${compact ? '' : embedded ? 'min-h-0 flex-1 auto-rows-fr' : 'md:min-h-0 md:flex-1 md:auto-rows-fr'}`}>
           {WEEKDAYS.map((d) => (
             <div
               key={d}
