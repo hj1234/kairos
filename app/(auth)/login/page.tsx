@@ -23,7 +23,7 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
-    router.push('/');
+    router.push('/app');
     router.refresh();
   }
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-900">
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-900 dark:text-white">
               Email
             </label>
             <input
@@ -50,7 +50,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-900">
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-900 dark:text-white">
               Password
             </label>
             <input
@@ -76,7 +76,7 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-sm text-zinc-700">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-zinc-900 underline">
+          <Link href="/signup" className="font-medium text-zinc-900 underline dark:text-white">
             Sign up
           </Link>
         </p>

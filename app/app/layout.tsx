@@ -18,12 +18,12 @@ export default async function AppLayout({
   return (
     <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 md:h-screen md:max-h-screen">
       <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
+        <Link href="/app" className="text-lg font-semibold tracking-tight">
           Kairos
         </Link>
         <nav className="flex items-center gap-2">
           <Link
-            href="/"
+            href="/app"
             aria-label="Calendar"
             className="rounded-lg p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
@@ -32,7 +32,7 @@ export default async function AppLayout({
             </svg>
           </Link>
           <Link
-            href="/settings"
+            href="/app/settings"
             aria-label="Settings"
             className="rounded-lg p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >

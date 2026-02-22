@@ -28,7 +28,7 @@ export default function SignupPage() {
       setError(error.message);
       return;
     }
-    router.push('/');
+    router.push('/app');
     router.refresh();
   }
 
@@ -41,7 +41,7 @@ export default function SignupPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-zinc-900">
+            <label htmlFor="displayName" className="block text-sm font-medium text-zinc-900 dark:text-white">
               Display name
             </label>
             <input
@@ -55,7 +55,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-900">
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-900 dark:text-white">
               Email
             </label>
             <input
@@ -69,7 +69,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-900">
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-900 dark:text-white">
               Password
             </label>
             <input
@@ -96,7 +96,7 @@ export default function SignupPage() {
         </form>
         <p className="text-center text-sm text-zinc-700">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-zinc-900 underline">
+          <Link href="/login" className="font-medium text-zinc-900 underline dark:text-white">
             Sign in
           </Link>
         </p>

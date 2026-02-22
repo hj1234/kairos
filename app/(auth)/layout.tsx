@@ -10,7 +10,7 @@ export default async function AuthLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user) {
-    redirect('/');
+    redirect('/app');
   }
 
   return (
