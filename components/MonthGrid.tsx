@@ -130,7 +130,7 @@ export function MonthGrid({
   };
 
   return (
-    <div className={`overflow-x-auto ${embedded ? 'flex min-h-0 flex-1 flex-col' : ''} ${embedded ? '' : 'rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'} ${compact || embedded ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
+    <div className={`overflow-x-hidden ${embedded ? 'flex min-h-0 flex-1 flex-col' : ''} ${embedded ? '' : 'rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'} ${compact || embedded ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
       <div className={`min-w-[280px] p-3 ${embedded ? 'flex min-h-0 flex-1 flex-col' : ''} ${compact || embedded ? '' : 'md:flex md:min-h-0 md:flex-1 md:flex-col'}`}>
         {!embedded && (
         <h3 className="mb-3 shrink-0 text-center font-medium">
