@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { calculateBalance } from '@/lib/balance';
 import { getUserColor } from '@/lib/user-colors';
+import { fetchBankHolidays } from '@/lib/bank-holidays';
 
 export async function BalanceCards() {
   const supabase = await createClient();
@@ -29,9 +30,11 @@ export async function BalanceCards() {
     if (partner) householdProfiles.push(partner);
   }
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('*');
+  const [eventsResult, bankHolidays] = await Promise.all([
+    supabase.from('events').select('*'),
+    fetchBankHolidays(),
+  ]);
+  const events = eventsResult.data;
 
   const sortedProfiles = [...householdProfiles].sort((a, b) =>
     a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase())
@@ -47,7 +50,7 @@ export async function BalanceCards() {
           nextPeriodWfaBalance,
           showNextPeriodHoliday,
           showNextPeriodWfa,
-        } = calculateBalance(profile, events || []);
+        } = calculateBalance(profile, events || [], bankHolidays);
 
         return (
           <div

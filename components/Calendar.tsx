@@ -113,7 +113,7 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
           </div>
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 md:flex md:min-h-0 md:flex-1 md:flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="relative flex shrink-0 items-center justify-between border-b border-zinc-200 px-3 py-2 dark:border-zinc-700">
           <div className="flex gap-1 rounded-lg bg-zinc-200 p-1 dark:bg-zinc-800">
             <button
@@ -146,7 +146,7 @@ export function Calendar({ bankHolidays, events, profiles, onDayClick, view, onV
           </span>
           <div className="w-[5.5rem]" aria-hidden />
         </div>
-        <div className="md:min-h-0 md:flex-1 md:overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {calendarMode === 'monthly' ? (
             <MonthGrid
               embedded

@@ -17,6 +17,7 @@ import { businessDaysInEvent } from '@/lib/balance';
 import { EventTypeIndicator } from './EventTypeIndicator';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const TOOLTIP_HEIGHT_ESTIMATE = 320;
 
 interface MonthGridProps {
   startMonth: Date;
@@ -67,6 +68,7 @@ export function MonthGrid({
     days.push(new Date(day));
     day = addDays(day, 1);
   }
+  const numWeeks = Math.ceil(days.length / 7);
 
   const isHalfDayOnDate = (e: Event, dateStr: string): boolean => {
     if (e.start_date === e.end_date) return !!(e.start_half_day || e.end_half_day);
@@ -76,6 +78,7 @@ export function MonthGrid({
   };
 
   const [hoveredDateStr, setHoveredDateStr] = useState<string | null>(null);
+  const [tooltipAbove, setTooltipAbove] = useState(true);
 
   const highlightedDates = useMemo(() => {
     if (!hoveredDateStr) return new Set<string>();
@@ -134,7 +137,10 @@ export function MonthGrid({
           {format(startMonth, 'MMMM yyyy')}
         </h3>
         )}
-        <div className={`grid grid-cols-7 gap-1 ${compact ? '' : embedded ? 'min-h-0 flex-1 auto-rows-fr' : 'md:min-h-0 md:flex-1 md:auto-rows-fr'}`}>
+        <div
+          className={`grid grid-cols-7 gap-1 ${compact ? '' : embedded ? 'min-h-0 flex-1' : 'md:min-h-0 md:flex-1'}`}
+          style={!compact ? { gridTemplateRows: `auto repeat(${numWeeks}, minmax(0, 1fr))` } : undefined}
+        >
           {WEEKDAYS.map((d) => (
             <div
               key={d}
@@ -150,15 +156,21 @@ export function MonthGrid({
             const isBankHoliday = bhSet.has(dateStr);
             const dayEvents = eventsByDate.get(dateStr) || [];
             const indicators = getEventIndicators(dateStr);
-            const isInTopHalf = dayIndex < 14;
-            const tooltipAbove = !isInTopHalf;
             const isHighlighted = hoveredDateStr !== null && highlightedDates.has(dateStr);
 
             return (
               <div
                 key={dateStr}
                 className="group relative flex min-h-0 flex-col"
-                onMouseEnter={() => dayEvents.length > 0 && setHoveredDateStr(dateStr)}
+                onMouseEnter={(e) => {
+                  if (dayEvents.length > 0) {
+                    setHoveredDateStr(dateStr);
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+                    setTooltipAbove(spaceBelow < TOOLTIP_HEIGHT_ESTIMATE && spaceAbove > spaceBelow);
+                  }
+                }}
                 onMouseLeave={() => setHoveredDateStr(null)}
               >
                 <button
@@ -207,7 +219,7 @@ export function MonthGrid({
                   >
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
                       {dayEvents.map((e) => {
-                        const daysUsed = businessDaysInEvent(e);
+                        const daysUsed = businessDaysInEvent(e, bankHolidays);
                         const daysText = daysUsed === 1 ? '1 day' : daysUsed % 1 === 0 ? `${Math.round(daysUsed)} days` : `${daysUsed.toFixed(1)} days`;
                         return (
                           <div

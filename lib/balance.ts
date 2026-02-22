@@ -6,8 +6,9 @@ import {
   setDate,
   addDays,
   isWeekend,
+  format,
 } from 'date-fns';
-import type { Profile, Event } from './types';
+import type { Profile, Event, BankHoliday } from './types';
 
 function getResetDate(year: number, day: number, month: number): Date {
   return setDate(setMonth(new Date(year, 0, 1), month - 1), day);
@@ -35,7 +36,8 @@ function businessDaysInEventWithinPeriod(
   periodStart: Date,
   periodEnd: Date,
   startHalfDay: boolean,
-  endHalfDay: boolean
+  endHalfDay: boolean,
+  bankHolidayDates: Set<string>
 ): number {
   const start = isBefore(eventStart, periodStart) ? periodStart : eventStart;
   const end = isAfter(eventEnd, periodEnd) ? periodEnd : eventEnd;
@@ -48,7 +50,9 @@ function businessDaysInEventWithinPeriod(
   const totalDays = Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
 
   while (cur <= end) {
-    if (!isWeekend(cur)) {
+    const dateStr = format(cur, 'yyyy-MM-dd');
+    const isBankHoliday = bankHolidayDates.has(dateStr);
+    if (!isWeekend(cur) && !isBankHoliday) {
       let multiplier = 1;
       if (isSameDay) {
         multiplier = startHalfDay || endHalfDay ? 0.5 : 1;
@@ -64,7 +68,11 @@ function businessDaysInEventWithinPeriod(
   return count;
 }
 
-export function businessDaysInEvent(event: Event): number {
+function bankHolidayDateSet(holidays: BankHoliday[]): Set<string> {
+  return new Set(holidays.map((h) => h.date));
+}
+
+export function businessDaysInEvent(event: Event, bankHolidays: BankHoliday[] = []): number {
   const start = new Date(event.start_date);
   const end = new Date(event.end_date);
   return businessDaysInEventWithinPeriod(
@@ -73,13 +81,15 @@ export function businessDaysInEvent(event: Event): number {
     start,
     end,
     event.start_half_day ?? false,
-    event.end_half_day ?? false
+    event.end_half_day ?? false,
+    bankHolidayDateSet(bankHolidays)
   );
 }
 
 export function calculateBalance(
   profile: Profile,
-  events: Event[]
+  events: Event[],
+  bankHolidays: BankHoliday[] = []
 ): {
   holidayBalance: number;
   wfaBalance: number;
@@ -92,6 +102,8 @@ export function calculateBalance(
   const wfaPeriod = getPeriod(profile, 'remote_work', 0);
   const nextHolidayPeriod = getPeriod(profile, 'holiday', 1);
   const nextWfaPeriod = getPeriod(profile, 'remote_work', 1);
+
+  const bhSet = bankHolidayDateSet(bankHolidays);
 
   let holidayUsed = 0;
   let wfaUsed = 0;
@@ -113,7 +125,8 @@ export function calculateBalance(
         holidayPeriod.periodStart,
         holidayPeriod.periodEnd,
         startHalfDay,
-        endHalfDay
+        endHalfDay,
+        bhSet
       );
       nextPeriodHolidayUsed += businessDaysInEventWithinPeriod(
         start,
@@ -121,7 +134,8 @@ export function calculateBalance(
         nextHolidayPeriod.periodStart,
         nextHolidayPeriod.periodEnd,
         startHalfDay,
-        endHalfDay
+        endHalfDay,
+        bhSet
       );
     } else {
       wfaUsed += businessDaysInEventWithinPeriod(
@@ -130,7 +144,8 @@ export function calculateBalance(
         wfaPeriod.periodStart,
         wfaPeriod.periodEnd,
         startHalfDay,
-        endHalfDay
+        endHalfDay,
+        bhSet
       );
       nextPeriodWfaUsed += businessDaysInEventWithinPeriod(
         start,
@@ -138,7 +153,8 @@ export function calculateBalance(
         nextWfaPeriod.periodStart,
         nextWfaPeriod.periodEnd,
         startHalfDay,
-        endHalfDay
+        endHalfDay,
+        bhSet
       );
     }
   }

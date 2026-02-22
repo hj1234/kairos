@@ -62,10 +62,20 @@ export default async function SettingsPage() {
     }
   }
 
+  let partner: { id: string; display_name: string } | null = null;
+  if (profile?.partner_id) {
+    const { data: partnerProfile } = await supabase
+      .from('profiles')
+      .select('id, display_name')
+      .eq('id', profile.partner_id)
+      .single();
+    partner = partnerProfile;
+  }
+
   return (
     <div className="p-4">
       <h1 className="mb-6 text-xl font-semibold">Settings</h1>
-      <SettingsForm profile={profile} />
+      <SettingsForm profile={profile} partner={partner} />
     </div>
   );
 }

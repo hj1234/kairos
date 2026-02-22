@@ -64,6 +64,7 @@ export function EventsSection({
         />
       ) : (
         <EventListView
+          bankHolidays={bankHolidays}
           events={events}
           profiles={profiles}
           onEventClick={openFormForEvent}
@@ -75,6 +76,8 @@ export function EventsSection({
 
       {formOpen && (
         <EventForm
+          bankHolidays={bankHolidays}
+          events={events}
           initialDate={selectedDate}
           dayEvents={dayEvents}
           onClose={closeForm}

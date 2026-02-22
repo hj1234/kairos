@@ -37,11 +37,11 @@ export default function SignupPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Kairos</h1>
-          <p className="mt-1 text-sm text-zinc-500">Create your account</p>
+          <p className="mt-1 text-sm text-zinc-600">Create your account</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="displayName" className="block text-sm font-medium text-zinc-900">
               Display name
             </label>
             <input
@@ -51,11 +51,11 @@ export default function SignupPage() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Henry"
               autoComplete="name"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-900">
               Email
             </label>
             <input
@@ -65,11 +65,11 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-900">
               Password
             </label>
             <input
@@ -80,7 +80,7 @@ export default function SignupPage() {
               required
               minLength={6}
               autoComplete="new-password"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
             />
           </div>
           {error && (
@@ -94,7 +94,7 @@ export default function SignupPage() {
             {loading ? 'Creating account...' : 'Sign up'}
           </button>
         </form>
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-zinc-700">
           Already have an account?{' '}
           <Link href="/login" className="font-medium text-zinc-900 underline">
             Sign in

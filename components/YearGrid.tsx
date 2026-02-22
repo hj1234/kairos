@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
+
+const TOOLTIP_HEIGHT_ESTIMATE = 320;
 import { format, getDaysInMonth, startOfMonth } from 'date-fns';
 import { getEventTypeDisplayName, type BankHoliday, type Event } from '@/lib/types';
 import { getUserColor } from '@/lib/user-colors';
@@ -44,6 +46,7 @@ export function YearGrid({
   }, [events]);
 
   const profileMap = useMemo(() => new Map(profiles.map((p) => [p.id, p.display_name])), [profiles]);
+  const [tooltipAbove, setTooltipAbove] = useState(true);
 
   const getEventIndicators = (dateStr: string) => {
     const evs = eventsByDate.get(dateStr) || [];
@@ -91,19 +94,37 @@ export function YearGrid({
         {!embedded && <h3 className="mb-3 shrink-0 text-center font-medium">{year}</h3>}
         <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:grid-rows-3 ${embedded ? 'min-h-0 flex-1' : 'md:min-h-0 md:flex-1'}`}>
           {months.map(({ month, monthName, days }) => (
-            <button
+            <div
               key={monthName}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => onDayClick(month, [])}
-              className="flex min-h-0 flex-col rounded-lg border border-zinc-200 p-2 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 md:overflow-hidden"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onDayClick(month, []);
+                }
+              }}
+              className="flex min-h-0 flex-col cursor-pointer rounded-lg border border-zinc-200 p-2 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 md:overflow-visible"
             >
               <span className="mb-2 shrink-0 text-xs font-medium text-zinc-700 dark:text-zinc-300">{monthName}</span>
-              <div className="flex min-h-[48px] flex-1 flex-wrap gap-2 overflow-y-auto md:min-h-0">
+              <div className="flex min-h-[48px] flex-1 flex-wrap gap-2 overflow-visible md:min-h-0">
                 {days.length === 0 ? (
                   <span className="text-xs text-zinc-400 dark:text-zinc-500">—</span>
                 ) : (
                   days.map(({ dateStr, day, events: dayEvents, indicators, isBankHoliday }) => (
-                    <div key={dateStr} className="group relative">
+                    <div
+                      key={dateStr}
+                      className="group relative"
+                      onMouseEnter={(e) => {
+                        if (dayEvents.length > 0) {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const spaceAbove = rect.top;
+                          setTooltipAbove(spaceBelow < TOOLTIP_HEIGHT_ESTIMATE && spaceAbove > spaceBelow);
+                        }
+                      }}
+                    >
                       <button
                         type="button"
                         onClick={(e) => {
@@ -134,10 +155,14 @@ export function YearGrid({
                         </div>
                       </button>
                       {dayEvents.length > 0 && (
-                        <div className="pointer-events-none invisible absolute left-1/2 z-50 min-w-[200px] max-w-[280px] -translate-x-1/2 rounded-xl border border-zinc-200 bg-white p-0 shadow-lg group-hover:visible dark:border-zinc-700 dark:bg-zinc-900 bottom-full mb-1">
+                        <div
+                          className={`pointer-events-none invisible absolute left-1/2 z-50 min-w-[200px] max-w-[280px] -translate-x-1/2 rounded-xl border border-zinc-200 bg-white p-0 shadow-lg group-hover:visible dark:border-zinc-700 dark:bg-zinc-900 ${
+                            tooltipAbove ? 'bottom-full mb-1' : 'top-full mt-1'
+                          }`}
+                        >
                           <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
                             {dayEvents.map((e) => {
-                              const daysUsed = businessDaysInEvent(e);
+                              const daysUsed = businessDaysInEvent(e, bankHolidays);
                               const daysText = daysUsed === 1 ? '1 day' : daysUsed % 1 === 0 ? `${Math.round(daysUsed)} days` : `${daysUsed.toFixed(1)} days`;
                               return (
                                 <div
@@ -185,7 +210,7 @@ export function YearGrid({
                   ))
                 )}
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>

@@ -4,16 +4,28 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { getEventTypeDisplayName, type EventType, type Event } from '@/lib/types';
+import { getEventTypeDisplayName, type BankHoliday, type EventType, type Event, type Profile } from '@/lib/types';
+import { calculateBalance, businessDaysInEvent } from '@/lib/balance';
+import { fetchBankHolidays } from '@/lib/bank-holidays';
+import { DatePicker } from './DatePicker';
 
 interface EventFormProps {
+  bankHolidays?: BankHoliday[];
+  events?: Event[];
   initialDate: Date;
   dayEvents: Event[];
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFormProps) {
+export function EventForm({
+  bankHolidays: bankHolidaysProp = [],
+  events: eventsProp = [],
+  initialDate,
+  dayEvents,
+  onClose,
+  onSaved,
+}: EventFormProps) {
   const [editingEvent, setEditingEvent] = useState<Event | null>(
     dayEvents.length === 1 ? dayEvents[0] : null
   );
@@ -25,7 +37,8 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
   const [endHalfDay, setEndHalfDay] = useState(false);
   const [forBoth, setForBoth] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [profiles, setProfiles] = useState<{ id: string; display_name: string }[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [bankHolidays, setBankHolidays] = useState<BankHoliday[]>(bankHolidaysProp);
   const router = useRouter();
   const supabase = createClient();
 
@@ -52,25 +65,31 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
   }, [editingEvent, dayEvents.length, initialDate]);
 
   useEffect(() => {
+    if (bankHolidaysProp.length > 0) {
+      setBankHolidays(bankHolidaysProp);
+    } else {
+      fetchBankHolidays().then(setBankHolidays);
+    }
+  }, [bankHolidaysProp]);
+
+  useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: myProfile } = await supabase
         .from('profiles')
-        .select('id, display_name, partner_id')
+        .select('*')
         .eq('id', user.id)
         .single();
       if (!myProfile) return;
-      const list: { id: string; display_name: string }[] = [
-        { id: myProfile.id, display_name: myProfile.display_name },
-      ];
+      const list: Profile[] = [myProfile as Profile];
       if (myProfile.partner_id) {
         const { data: partner } = await supabase
           .from('profiles')
-          .select('id, display_name')
+          .select('*')
           .eq('id', myProfile.partner_id)
           .single();
-        if (partner) list.push(partner);
+        if (partner) list.push(partner as Profile);
       }
       setProfiles(list);
     }
@@ -85,6 +104,42 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
     const userIds = forBoth && profiles.length === 2
       ? profiles.map((p) => p.id)
       : [user.id];
+
+    const draftEvent = {
+      start_date: startDate,
+      end_date: endDate,
+      start_half_day: startHalfDay,
+      end_half_day: endHalfDay,
+    } as Event;
+    const daysNeeded = businessDaysInEvent(draftEvent, bankHolidays);
+
+    const eventsForBalance = isEditMode && editingEvent
+      ? (eventsProp || []).filter((ev) => ev.id !== editingEvent.id)
+      : (eventsProp || []);
+
+    const insufficient: { name: string; available: number; needed: number }[] = [];
+    for (const uid of userIds) {
+      const profile = profiles.find((p) => p.id === uid);
+      if (!profile) continue;
+      const { holidayBalance, wfaBalance } = calculateBalance(profile, eventsForBalance, bankHolidays);
+      const available = type === 'holiday' ? holidayBalance : wfaBalance;
+      if (available < daysNeeded) {
+        insufficient.push({
+          name: profile.display_name,
+          available,
+          needed: daysNeeded,
+        });
+      }
+    }
+    if (insufficient.length > 0) {
+      setLoading(false);
+      const typeLabel = type === 'holiday' ? 'holiday' : 'remote work';
+      const msg = insufficient.length === 1
+        ? `${insufficient[0].name} has only ${insufficient[0].available} ${insufficient[0].available === 1 ? 'day' : 'days'} ${typeLabel} allowance remaining, but this event uses ${insufficient[0].needed} ${insufficient[0].needed === 1 ? 'day' : 'days'}.`
+        : `${insufficient.map((u) => `${u.name} (${u.available} ${u.available === 1 ? 'day' : 'days'} left)`).join(' and ')} have insufficient ${typeLabel} allowance for this ${daysNeeded} ${daysNeeded === 1 ? 'day' : 'days'} event.`;
+      alert(msg);
+      return;
+    }
 
     if (isEditMode && editingEvent) {
       // Update: check overlap excluding current event
@@ -333,20 +388,27 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
               Start date
             </label>
             <div className="mt-1 flex items-center gap-3">
-              <input
+              <DatePicker
                 id="startDate"
-                type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="block flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-900 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
+                onChange={(d) => {
+                  setStartDate(d);
+                  if (endDate < d) setEndDate(d);
+                }}
+                className="flex-1"
               />
-              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <label
+                className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  startHalfDay
+                    ? 'border-zinc-900 bg-zinc-100 text-zinc-900 dark:border-zinc-100 dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                }`}
+              >
                 <input
                   type="checkbox"
                   checked={startHalfDay}
                   onChange={(e) => setStartHalfDay(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
+                  className="sr-only"
                 />
                 Half day
               </label>
@@ -357,22 +419,26 @@ export function EventForm({ initialDate, dayEvents, onClose, onSaved }: EventFor
               End date
             </label>
             <div className="mt-1 flex items-center gap-3">
-              <input
+              <DatePicker
                 id="endDate"
-                type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={setEndDate}
                 min={startDate}
-                required
-                className="block flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-900 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
+                className="flex-1"
               />
               {startDate !== endDate && (
-                <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <label
+                  className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                    endHalfDay
+                      ? 'border-zinc-900 bg-zinc-100 text-zinc-900 dark:border-zinc-100 dark:bg-zinc-800 dark:text-zinc-100'
+                      : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={endHalfDay}
                     onChange={(e) => setEndHalfDay(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100"
+                    className="sr-only"
                   />
                   Half day
                 </label>

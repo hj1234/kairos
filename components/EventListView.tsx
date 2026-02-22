@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { isBefore, startOfDay } from 'date-fns';
-import { getEventTypeDisplayName, type Event } from '@/lib/types';
+import { getEventTypeDisplayName, type BankHoliday, type Event } from '@/lib/types';
 import { getUserColor } from '@/lib/user-colors';
 import { businessDaysInEvent } from '@/lib/balance';
 import { EventTypeIndicator } from './EventTypeIndicator';
@@ -14,6 +14,7 @@ interface Profile {
 }
 
 interface EventListViewProps {
+  bankHolidays?: BankHoliday[];
   events: Event[];
   profiles: Profile[];
   onEventClick: (event: Event) => void;
@@ -23,6 +24,7 @@ interface EventListViewProps {
 }
 
 export function EventListView({
+  bankHolidays = [],
   events,
   profiles,
   onEventClick,
@@ -139,7 +141,7 @@ export function EventListView({
               {pastExpanded && (
                 <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
                   {pastEvents.map((event) => {
-                    const daysUsed = businessDaysInEvent(event);
+                    const daysUsed = businessDaysInEvent(event, bankHolidays);
                     const daysText = daysUsed === 1 ? '1 day' : daysUsed % 1 === 0 ? `${Math.round(daysUsed)} days` : `${daysUsed.toFixed(1)} days`;
                     return (
                     <li key={event.id}>
@@ -231,7 +233,7 @@ export function EventListView({
               {futureExpanded && (
               <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
                 {futureEvents.map((event) => {
-                  const daysUsed = businessDaysInEvent(event);
+                  const daysUsed = businessDaysInEvent(event, bankHolidays);
                   const daysText = daysUsed === 1 ? '1 day' : daysUsed % 1 === 0 ? `${Math.round(daysUsed)} days` : `${daysUsed.toFixed(1)} days`;
                   return (
                   <li key={event.id}>
